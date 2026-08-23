@@ -1,0 +1,49 @@
+.clue-card {
+  background: var(--color-parchment-well);
+  border-radius: var(--radius-panel);
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  margin: var(--space-4);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-parchment-line);
+}
+
+.clue-card--landmark {
+  border-color: var(--color-amber);
+  border-width: 1.5px;
+}
+
+.clue-card__eyebrow {
+  font-family: var(--font-utility);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-moss);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.clue-card__landmark-tag {
+  background: var(--color-amber);
+  color: var(--color-parchment);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+.clue-card__text {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--color-ink-navy);
+  margin: 0;
+}
+
+.clue-card__moves {
+  margin-top: var(--space-3);
+  font-family: var(--font-utility);
+  font-size: 11px;
+  color: var(--color-ink-soft);
+}
