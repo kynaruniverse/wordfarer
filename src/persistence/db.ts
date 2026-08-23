@@ -30,7 +30,11 @@ export async function loadSaveState(): Promise<SaveState> {
     await db.put(STORE_NAME, fresh, SAVE_KEY);
     return fresh;
   }
-  return migrateSaveState(raw as SaveState);
+  const migrated = migrateSaveState(raw as SaveState);
+  if (migrated.schemaVersion !== (raw as SaveState).schemaVersion) {
+    await db.put(STORE_NAME, migrated, SAVE_KEY);
+  }
+  return migrated;
 }
 
 export async function persistSaveState(state: SaveState): Promise<void> {

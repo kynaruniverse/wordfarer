@@ -7,9 +7,11 @@ export function exportSaveStateToFile(state: SaveState): void {
   const a = document.createElement('a');
   const dateStamp = new Date().toISOString().slice(0, 10);
   a.href = url;
-  a.download = `wordfarer-wordbank-${dateStamp}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+a.download = `wordfarer-wordbank-${dateStamp}.json`;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export class ImportValidationError extends Error {}

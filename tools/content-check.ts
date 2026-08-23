@@ -41,6 +41,15 @@ for (const r of recipes) {
   pairSeen.add(key);
 }
 
+// Self-pair recipes (a word combined with itself) can never be assembled —
+// the Workbench won't let the same word occupy both slots, and reachableFrom()
+// in craftEngine.ts skips i===j pairs by design.
+for (const r of recipes) {
+  if (r.inputs[0] === r.inputs[1]) {
+    fail(`Recipe for "${r.output}" combines a word with itself ("${r.inputs[0]}") — uncraftable through the Workbench UI`);
+  }
+}
+
 // Expeditions reference real target/chain word ids
 for (const file of regionFiles) {
   const expeditions = file.expeditions as ExpeditionDef[];
@@ -57,6 +66,29 @@ for (const file of regionFiles) {
   for (const id of file.region.expeditionIds) {
     if (!expeditionIds.has(id)) {
       fail(`Region "${file.region.id}" lists expedition id "${id}" with no matching expedition definition`);
+    }
+  }
+}
+
+// Every expedition target must be reachable from the starter Wordbank via
+// some sequence of crafts, or the expedition is unsolvable.
+const starterIds = new Set(words.filter((w) => w.isStarter).map((w) => w.id));
+const closure = new Set(starterIds);
+let grew = true;
+while (grew) {
+  grew = false;
+  for (const r of recipes) {
+    const [a, b] = r.inputs;
+    if (closure.has(a) && closure.has(b) && !closure.has(r.output)) {
+      closure.add(r.output);
+      grew = true;
+    }
+  }
+}
+for (const file of regionFiles) {
+  for (const exp of file.expeditions as ExpeditionDef[]) {
+    if (!closure.has(exp.targetId)) {
+      fail(`Expedition "${exp.id}" targets "${exp.targetId}", which is not reachable from starter words via any recipe chain`);
     }
   }
 }

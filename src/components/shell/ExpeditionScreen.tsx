@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useGameStore, getExpeditionById, allExpeditions } from '@/state/gameStore';
 import { ClueCard } from '../expedition/ClueCard';
 import { IngredientNudge } from '../expedition/IngredientNudge';
@@ -12,11 +13,14 @@ export function ExpeditionScreen() {
   const activeExpeditionId = useGameStore((s) => s.activeExpeditionId);
   const moves = useGameStore((s) => s.currentExpeditionMoves);
   const wordsUsed = useGameStore((s) => s.currentExpeditionWordsUsed);
-  const ownedWordIds = useGameStore((s) => s.ownedWordIds)();
+  const save = useGameStore((s) => s.save);
+  const ownedWordIds = useMemo(
+    () => new Set(save?.wordbank.map((w) => w.wordId) ?? []),
+    [save?.wordbank]
+  );
   const ingredientNudge = useGameStore((s) => s.ingredientNudge);
   const dismissNudge = useGameStore((s) => s.dismissNudge);
   const justSolvedExpeditionId = useGameStore((s) => s.justSolvedExpeditionId);
-  const save = useGameStore((s) => s.save);
   const advanceToNext = useGameStore((s) => s.advanceToNext);
 
   const expedition = activeExpeditionId ? getExpeditionById(activeExpeditionId) : undefined;
@@ -41,7 +45,7 @@ export function ExpeditionScreen() {
         isLandmark={expedition.isLandmark}
       />
 
-      {ingredientNudge && <IngredientNudge onDismiss={dismissNudge} />}
+      {ingredientNudge && <IngredientNudge missingWordIds={ingredientNudge} onDismiss={dismissNudge} />}
 
       <div className="expedition-screen__split">
         <Workbench />

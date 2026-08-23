@@ -25,20 +25,16 @@ function fullClosure(ownedWordIds: ReadonlySet<string>): Set<string> {
  * not to enforce a single "correct" route, since multiple recipe paths to
  * the same word may exist.
  */
-function requiredBaseWords(targetId: string, seen = new Set<string>()): Set<string> {
-  if (seen.has(targetId)) return new Set(); // guard against malformed cycles
-  seen.add(targetId);
-
+function requiredBaseWords(targetId: string, ancestors: ReadonlySet<string> = new Set()): Set<string> {
+  if (ancestors.has(targetId)) return new Set(); // guard against cycles on this path only
   const recipe = getRecipeFor(targetId);
-  if (!recipe) {
-    // No recipe produces this id — it's a base/starter word.
-    return new Set([targetId]);
-  }
-
+  if (!recipe) return new Set([targetId]);
+  const nextAncestors = new Set(ancestors);
+  nextAncestors.add(targetId);
   const [a, b] = recipe.inputs;
   const result = new Set<string>();
-  for (const id of requiredBaseWords(a, seen)) result.add(id);
-  for (const id of requiredBaseWords(b, seen)) result.add(id);
+  for (const id of requiredBaseWords(a, nextAncestors)) result.add(id);
+  for (const id of requiredBaseWords(b, nextAncestors)) result.add(id);
   return result;
 }
 

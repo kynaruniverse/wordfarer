@@ -56,7 +56,7 @@ export function Workbench() {
         <button
           type="button"
           className="workbench__craft"
-          disabled={!bothFilled}
+          disabled={!bothFilled || animState !== 'idle'}
           onClick={() => slotA && slotB && craft(slotA, slotB)}
         >
           Craft
