@@ -1,45 +1,48 @@
-import { Organism, createOrganism } from '../core/organism';
-import { ALL_BODY_PLANS } from '../core/bodyPlans';
+/**
+ * habitat/habitat.ts
+ * Holds the set of currently-active organisms (distinct from the
+ * Archive, which holds every discovered organism ever, active or
+ * not). Simulation state here is presentation-only and must never
+ * write back into genome/archive data.
+ */
 
-export interface HabitatBounds {
-  width: number;
-  height: number;
-  padding: number; // keep-out margin from screen edges
+import type { Organism, OrganismRuntimeState } from '../core/organism';
+import { createRuntimeState } from '../core/organism';
+import { HABITAT_BOUNDS, MAX_POPULATION } from '../config';
+
+export interface HabitatEntry {
+  organism: Organism;
+  runtime: OrganismRuntimeState;
 }
 
-export function createInitialOrganisms(count: number, bounds: HabitatBounds): Organism[] {
-  const organisms: Organism[] = [];
-  for (let i = 0; i < count; i++) {
-    const bodyPlan = ALL_BODY_PLANS[i % ALL_BODY_PLANS.length];
-    const x = bounds.padding + Math.random() * (bounds.width - bounds.padding * 2);
-    const y = bounds.padding + Math.random() * (bounds.height - bounds.padding * 2);
-    organisms.push(createOrganism(bodyPlan, x, y));
+export class Habitat {
+  private active = new Map<string, HabitatEntry>();
+
+  get size(): number {
+    return this.active.size;
   }
-  return organisms;
-}
 
-export function updateHabitat(organisms: Organism[], dt: number, bounds: HabitatBounds) {
-  for (const org of organisms) {
-    // Occasionally pick a new wander direction
-    org.wanderTimer -= dt;
-    if (org.wanderTimer <= 0) {
-      org.heading += (Math.random() - 0.5) * Math.PI * 0.8;
-      org.wanderTimer = 1.5 + Math.random() * 2.5;
-    }
+  isFull(): boolean {
+    return this.active.size >= MAX_POPULATION;
+  }
 
-    const moveSpeed = org.genome.speed * 30; // px/sec
-    org.x += Math.cos(org.heading) * moveSpeed * dt;
-    org.y += Math.sin(org.heading) * moveSpeed * dt;
+  add(organism: Organism, position?: { x: number; y: number }): boolean {
+    if (this.isFull()) return false;
+    const x = position?.x ?? Math.random() * HABITAT_BOUNDS.width;
+    const y = position?.y ?? Math.random() * HABITAT_BOUNDS.height;
+    this.active.set(organism.id, { organism, runtime: createRuntimeState(x, y) });
+    return true;
+  }
 
-    // Bounce off habitat edges rather than escaping the screen
-    const minX = bounds.padding;
-    const maxX = bounds.width - bounds.padding;
-    const minY = bounds.padding;
-    const maxY = bounds.height - bounds.padding;
+  remove(organismId: string): void {
+    this.active.delete(organismId);
+  }
 
-    if (org.x < minX) { org.x = minX; org.heading = Math.PI - org.heading; }
-    if (org.x > maxX) { org.x = maxX; org.heading = Math.PI - org.heading; }
-    if (org.y < minY) { org.y = minY; org.heading = -org.heading; }
-    if (org.y > maxY) { org.y = maxY; org.heading = -org.heading; }
+  get(organismId: string): HabitatEntry | undefined {
+    return this.active.get(organismId);
+  }
+
+  entries(): HabitatEntry[] {
+    return [...this.active.values()];
   }
 }

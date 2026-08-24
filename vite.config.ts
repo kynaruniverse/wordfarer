@@ -2,7 +2,9 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   root: '.',
+  publicDir: 'public',
   build: {
-    outDir: 'dist'
-  }
+    outDir: 'dist',
+    target: 'es2020',
+  },
 });

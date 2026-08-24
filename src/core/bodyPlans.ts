@@ -1,31 +1,50 @@
-export type BodyPlanId = 'quadruped' | 'serpent';
+/**
+ * core/bodyPlans.ts
+ * The fixed set of base body plans. MVP ships exactly two (quadruped,
+ * serpent) per the design spec's recommendation to prove the pipeline
+ * before multiplying it. Adding a third later means adding one entry
+ * here plus matching cases in render/shapes.ts and render/animate.ts —
+ * nothing else in the engine needs to change.
+ */
 
-export interface BodyPlanRanges {
-  segments: [number, number];
-  limbCount: number; // fixed per plan, not a range — defines the archetype
-  limbLength: [number, number]; // normalized 0-1
-  bodyLength: [number, number]; // normalized 0-1
-  bodyWidth: [number, number]; // normalized 0-1
-  speed: [number, number]; // normalized 0-1
+import type { BodyPlanId } from './genome';
+
+export interface BodyPlanDefinition {
+  id: BodyPlanId;
+  /** Movement archetype used by render/animate.ts to pick an algorithm. */
+  movementType: 'gait' | 'undulate';
+  /** Real-world ranges that 0..1 trait values map onto for this plan. */
+  ranges: {
+    size: [number, number];
+    limbLength: [number, number];
+    segmentCount: [number, number];
+    speed: [number, number];
+  };
 }
 
-export const BODY_PLANS: Record<BodyPlanId, BodyPlanRanges> = {
+export const BODY_PLANS: Record<BodyPlanId, BodyPlanDefinition> = {
   quadruped: {
-    segments: [1, 2],
-    limbCount: 4,
-    limbLength: [0.3, 0.8],
-    bodyLength: [0.4, 0.9],
-    bodyWidth: [0.4, 0.8],
-    speed: [0.3, 0.9]
+    id: 'quadruped',
+    movementType: 'gait',
+    ranges: {
+      size: [18, 46],
+      limbLength: [8, 26],
+      segmentCount: [3, 5], // body segments, not legs (always 4 legs)
+      speed: [20, 90], // px/sec
+    },
   },
   serpent: {
-    segments: [5, 12],
-    limbCount: 0,
-    limbLength: [0, 0],
-    bodyLength: [0.7, 1.0],
-    bodyWidth: [0.1, 0.3],
-    speed: [0.2, 0.7]
-  }
+    id: 'serpent',
+    movementType: 'undulate',
+    ranges: {
+      size: [14, 34],
+      limbLength: [0, 0], // unused for serpent
+      segmentCount: [6, 14],
+      speed: [15, 70],
+    },
+  },
 };
 
-export const ALL_BODY_PLANS: BodyPlanId[] = ['quadruped', 'serpent'];
+export function mapRange(t: number, [lo, hi]: [number, number]): number {
+  return lo + t * (hi - lo);
+}

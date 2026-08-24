@@ -5,12 +5,80 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Genesis</title>
   <style>
-    html, body { margin: 0; padding: 0; overflow: hidden; background: #0d1117; }
-    canvas { display: block; touch-action: none; }
+    :root { color-scheme: dark; }
+    html, body { margin: 0; padding: 0; overflow: hidden; background: #0b1210; height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    #app { position: relative; width: 100vw; height: 100vh; }
+    #habitat-canvas { display: block; touch-action: none; position: absolute; top: 0; left: 0; }
+
+    #nav-bar { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: center;
+      gap: 8px; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 30;
+      background: linear-gradient(to top, rgba(5,8,7,0.9), rgba(5,8,7,0)); }
+    #nav-bar button { appearance: none; border: 1px solid rgba(255,255,255,0.15); color: #cfe8de;
+      background: rgba(20,30,27,0.8); padding: 10px 22px; border-radius: 999px; font-size: 14px;
+      letter-spacing: 0.02em; }
+    #nav-bar button.active { background: #2c6e5c; border-color: #4fae8f; color: #fff; }
+
+    #reveal-overlay, #archive-view { position: fixed; inset: 0; z-index: 20;
+      background: rgba(5,8,7,0.97); display: flex; flex-direction: column; align-items: center;
+      color: #cfe8de; transition: opacity 200ms ease; }
+    .hidden { display: none !important; }
+
+    #reveal-overlay { justify-content: center; opacity: 0; }
+    #reveal-overlay.visible { opacity: 1; }
+    #reveal-canvas { width: 220px; height: 220px; }
+    #reveal-caption { margin-top: 18px; font-size: 13px; opacity: 0.7; letter-spacing: 0.04em; }
+
+    #archive-view { padding: 24px 12px 90px; overflow-y: auto; align-items: stretch; box-sizing: border-box; }
+    #archive-title { text-align: center; font-size: 16px; margin: 8px 0 20px; opacity: 0.85; letter-spacing: 0.04em; }
+    #archive-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .archive-entry { background: rgba(255,255,255,0.04); border-radius: 12px; aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center; }
+    .archive-entry canvas { width: 70%; height: 70%; }
+    #archive-empty { text-align: center; opacity: 0.5; font-size: 13px; margin-top: 40px; }
+
+    #archive-detail { position: fixed; inset: 0; z-index: 25; background: rgba(5,8,7,0.98);
+      display: none; flex-direction: column; align-items: center; justify-content: center; color: #cfe8de; }
+    #archive-detail.visible { display: flex; }
+    #archive-detail canvas { width: 180px; height: 180px; }
+    #archive-detail-meta { margin-top: 14px; font-size: 12px; opacity: 0.6; }
+    #archive-detail-close { margin-top: 24px; background: none; border: 1px solid rgba(255,255,255,0.2);
+      color: #cfe8de; padding: 8px 20px; border-radius: 999px; }
+
+    #debug-panel { position: fixed; top: 10px; left: 10px; right: 10px; z-index: 40;
+      background: rgba(0,0,0,0.75); color: #7dffb3; font-family: monospace; font-size: 11px;
+      padding: 8px 10px; border-radius: 8px; max-height: 40vh; overflow-y: auto; white-space: pre-wrap; }
   </style>
 </head>
 <body>
-  <canvas id="habitat"></canvas>
+  <div id="app">
+    <canvas id="habitat-canvas"></canvas>
+
+    <div id="reveal-overlay">
+      <canvas id="reveal-canvas" width="220" height="220"></canvas>
+      <div id="reveal-caption"></div>
+    </div>
+
+    <div id="archive-view" class="hidden">
+      <div id="archive-title">Archive</div>
+      <div id="archive-empty" class="hidden">Nothing discovered yet — go merge something.</div>
+      <div id="archive-grid"></div>
+    </div>
+
+    <div id="archive-detail">
+      <canvas id="archive-detail-canvas" width="180" height="180"></canvas>
+      <div id="archive-detail-meta"></div>
+      <button id="archive-detail-close">Close</button>
+    </div>
+
+    <div id="debug-panel" class="hidden"></div>
+
+    <nav id="nav-bar">
+      <button id="nav-habitat" class="active">Habitat</button>
+      <button id="nav-archive">Archive</button>
+    </nav>
+  </div>
+
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
