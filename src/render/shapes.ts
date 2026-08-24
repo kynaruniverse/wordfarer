@@ -1,12 +1,19 @@
 import { Genome } from '../core/genome';
 
-const BASE_UNIT = 60; // px, scales all organism dimensions before genome.scale is applied
+const BASE_UNIT = 60;
 
 function genomeColor(genome: Genome): string {
   return `hsl(${genome.hue.toFixed(0)}, ${(genome.saturation * 100).toFixed(0)}%, 55%)`;
 }
 
-export function drawQuadruped(ctx: CanvasRenderingContext2D, genome: Genome, x: number, y: number) {
+export function drawQuadruped(
+  ctx: CanvasRenderingContext2D,
+  genome: Genome,
+  x: number,
+  y: number,
+  heading: number,
+  t: number
+) {
   const s = genome.scale;
   const bodyW = genome.bodyWidth * BASE_UNIT * s;
   const bodyL = genome.bodyLength * BASE_UNIT * s;
@@ -15,16 +22,21 @@ export function drawQuadruped(ctx: CanvasRenderingContext2D, genome: Genome, x: 
 
   ctx.save();
   ctx.translate(x, y);
+  ctx.rotate(heading);
   ctx.fillStyle = color;
   ctx.strokeStyle = color;
   ctx.lineWidth = Math.max(2, bodyW * 0.15);
 
-  // Four limbs, mirrored front/back and left/right — symmetry pulls the
-  // right-side limbs toward matching the left-side ones exactly.
-  const limbOffsetsX = [-bodyL * 0.35, bodyL * 0.35]; // front, back
-  for (const ox of limbOffsetsX) {
-    const leftAngle = Math.PI / 2 + 0.3;
-    const rightAngleBase = Math.PI / 2 - 0.3;
+  // Faster genomes step quicker; front/back limb pairs swing in opposition
+  // to approximate a diagonal walking gait.
+  const gaitFreq = genome.speed * 8 + 2;
+  const swing = Math.sin(t * gaitFreq) * 0.5;
+
+  const limbOffsetsX = [-bodyL * 0.35, bodyL * 0.35];
+  limbOffsetsX.forEach((ox, pairIndex) => {
+    const pairPhase = pairIndex === 0 ? swing : -swing;
+    const leftAngle = Math.PI / 2 + 0.3 + pairPhase;
+    const rightAngleBase = Math.PI / 2 - 0.3 - pairPhase;
     const rightAngle = rightAngleBase * genome.symmetry + leftAngle * (1 - genome.symmetry);
 
     ctx.beginPath();
@@ -36,9 +48,8 @@ export function drawQuadruped(ctx: CanvasRenderingContext2D, genome: Genome, x: 
     ctx.moveTo(ox, 0);
     ctx.lineTo(ox + Math.cos(rightAngle) * limbLen, Math.sin(rightAngle) * limbLen);
     ctx.stroke();
-  }
+  });
 
-  // Body
   ctx.beginPath();
   ctx.ellipse(0, 0, bodyL / 2, bodyW / 2, 0, 0, Math.PI * 2);
   ctx.fill();
@@ -46,7 +57,14 @@ export function drawQuadruped(ctx: CanvasRenderingContext2D, genome: Genome, x: 
   ctx.restore();
 }
 
-export function drawSerpent(ctx: CanvasRenderingContext2D, genome: Genome, x: number, y: number) {
+export function drawSerpent(
+  ctx: CanvasRenderingContext2D,
+  genome: Genome,
+  x: number,
+  y: number,
+  heading: number,
+  t: number
+) {
   const s = genome.scale;
   const segCount = genome.segments;
   const totalLength = genome.bodyLength * BASE_UNIT * 3 * s;
@@ -56,16 +74,17 @@ export function drawSerpent(ctx: CanvasRenderingContext2D, genome: Genome, x: nu
 
   ctx.save();
   ctx.translate(x, y);
+  ctx.rotate(heading);
   ctx.fillStyle = color;
 
+  const waveFreq = genome.speed * 4 + 1;
+  const curveAmplitude = (1 - genome.symmetry) * 40 + 10;
+
   for (let i = 0; i < segCount; i++) {
-    // Static sine curve for now — this becomes a time-driven wave in the
-    // animation milestone. Symmetry controls how tightly it curls.
-    const t = i / (segCount - 1);
-    const curveAmplitude = (1 - genome.symmetry) * 40 + 10;
     const sx = -totalLength / 2 + i * segSpacing;
-    const sy = Math.sin(t * Math.PI * 2) * curveAmplitude;
-    const segRadius = radius * (1 - t * 0.4); // tapers toward the tail
+    // Traveling wave: phase shifts along the body AND over time -> undulation
+    const sy = Math.sin(t * waveFreq - i * 0.8) * curveAmplitude;
+    const segRadius = radius * (1 - (i / (segCount - 1)) * 0.4);
 
     ctx.beginPath();
     ctx.arc(sx, sy, segRadius, 0, Math.PI * 2);
@@ -75,10 +94,17 @@ export function drawSerpent(ctx: CanvasRenderingContext2D, genome: Genome, x: nu
   ctx.restore();
 }
 
-export function drawOrganism(ctx: CanvasRenderingContext2D, genome: Genome, x: number, y: number) {
+export function drawOrganism(
+  ctx: CanvasRenderingContext2D,
+  genome: Genome,
+  x: number,
+  y: number,
+  heading: number,
+  t: number
+) {
   if (genome.bodyPlan === 'quadruped') {
-    drawQuadruped(ctx, genome, x, y);
+    drawQuadruped(ctx, genome, x, y, heading, t);
   } else if (genome.bodyPlan === 'serpent') {
-    drawSerpent(ctx, genome, x, y);
+    drawSerpent(ctx, genome, x, y, heading, t);
   }
 }

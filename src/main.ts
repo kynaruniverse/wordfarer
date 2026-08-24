@@ -1,6 +1,7 @@
 import { CONFIG } from './config';
-import { generateGenome } from './core/genome';
+import { createInitialOrganisms, updateHabitat, HabitatBounds } from './habitat/habitat';
 import { drawOrganism } from './render/shapes';
+import { Organism } from './core/organism';
 
 function initCanvas(): CanvasRenderingContext2D {
   const canvas = document.getElementById('habitat') as HTMLCanvasElement;
@@ -22,25 +23,37 @@ function initCanvas(): CanvasRenderingContext2D {
   return ctx;
 }
 
-function render(ctx: CanvasRenderingContext2D) {
-  const { innerWidth: w, innerHeight: h } = window;
+let organisms: Organism[] = [];
+let bounds: HabitatBounds;
+let lastTime = 0;
+
+function setupHabitat() {
+  bounds = { width: window.innerWidth, height: window.innerHeight, padding: 60 };
+  organisms = createInitialOrganisms(3, bounds);
+
+  window.addEventListener('resize', () => {
+    bounds.width = window.innerWidth;
+    bounds.height = window.innerHeight;
+  });
+}
+
+function loop(ctx: CanvasRenderingContext2D, timestampMs: number) {
+  const t = timestampMs / 1000;
+  const dt = lastTime ? t - lastTime : 0;
+  lastTime = t;
+
+  updateHabitat(organisms, dt, bounds);
+
   ctx.fillStyle = CONFIG.habitatBackground;
-  ctx.fillRect(0, 0, w, h);
+  ctx.fillRect(0, 0, bounds.width, bounds.height);
 
-  // Temporary proof: draw one static organism per body plan, side by side.
-  // This block gets replaced by the habitat milestone (multiple organisms,
-  // positioned and moving within bounds).
-  const quad = generateGenome('quadruped');
-  const serp = generateGenome('serpent');
+  for (const org of organisms) {
+    drawOrganism(ctx, org.genome, org.x, org.y, org.heading, t);
+  }
 
-  drawOrganism(ctx, quad, w * 0.3, h * 0.5);
-  drawOrganism(ctx, serp, w * 0.7, h * 0.5);
-
-  ctx.fillStyle = '#dfffe8';
-  ctx.font = '12px monospace';
-  ctx.fillText('quadruped', w * 0.3 - 35, h * 0.5 + 80);
-  ctx.fillText('serpent', w * 0.7 - 25, h * 0.5 + 60);
+  requestAnimationFrame((ts) => loop(ctx, ts));
 }
 
 const ctx = initCanvas();
-render(ctx);
+setupHabitat();
+requestAnimationFrame((ts) => loop(ctx, ts));
