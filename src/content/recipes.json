@@ -21,5 +21,8 @@
   { "inputs": ["harbour", "light"], "output": "lighthouse" },
 
   { "inputs": ["fog", "worry"], "output": "relief" },
-  { "inputs": ["rain", "calm"], "output": "relief" }
+  { "inputs": ["rain", "calm"], "output": "relief" },
+
+  { "inputs": ["storm-cloud", "sailor"], "output": "worry" },
+  { "inputs": ["harbour", "water"], "output": "calm" }
 ]

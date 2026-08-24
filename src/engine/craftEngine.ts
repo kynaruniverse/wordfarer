@@ -47,3 +47,9 @@ export function reachableFrom(ownedWordIds: ReadonlySet<string>): Set<string> {
 export function getRecipeFor(outputId: string): RecipeDef | undefined {
   return recipes.find((r) => r.output === outputId);
 }
+
+/** All recipes that produce a given output — a word can have more than one
+ * valid crafting path (e.g. "relief" via fog+worry OR rain+calm). */
+export function getRecipesFor(outputId: string): RecipeDef[] {
+  return recipes.filter((r) => r.output === outputId);
+}
