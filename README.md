@@ -1,64 +1,47 @@
-# Genesis
+# Wordfarer
 
-Procedural evolution sandbox. See `genesis-concept-lock.md` and
-`genesis-design-spec.md` for the full design (not included in this repo —
-keep them alongside it in your notes).
+A cartographer-of-language puzzle game. Full concept lives in the project doc — this README covers the build.
 
-## Status: engine foundation (Milestone 1 of the MVP)
+## Workflow (Spck / Termux / GitHub Actions)
 
-**Built and tested:**
-- `core/genome.ts` — deterministic seeded PRNG (mulberry32) + genome data model
-- `core/inheritance.ts` — bias-toward-stronger-parent recombination
-- `core/mutation.ts` — frequent subtle jitter, rare dramatic mutation
-- `core/bodyPlans.ts` — quadruped + serpent archetype definitions
-- `core/seed.ts` — genome ↔ short shareable string, with checksum validation
-- `core/organism.ts` — organism entity + `merge()` orchestration
-- `render/` — Canvas 2D shapes and per-body-plan procedural movement
-- `habitat/` — active-organism state + simulation tick
-- `archive/` — localStorage persistence
-- `main.ts` — boots a live habitat: first run generates 3 starting organisms
-  and they move around the canvas
-- 12 passing tests covering determinism, range safety, and seed round-tripping
+You never run `npm install` or `npm run build` locally. Edit files in Spck, commit and push from Termux (`git add -A && git commit -m "..." && git push`), and GitHub Actions builds + deploys to GitHub Pages automatically on every push to `main`.
 
-**Run it:**
-```
-npm install
-npm run dev       # local dev server
-npm test          # run the test suite
-npm run build     # production build to dist/
-```
+**One-time setup, from a browser (not Termux):**
+1. Push this repo to GitHub.
+2. Repo Settings → Pages → Source → "GitHub Actions".
+3. Confirm the `base` in `vite.config.ts` matches your repo name: `/your-repo-name/`.
+4. Push to `main` — check the Actions tab for the build, then visit the Pages URL.
 
-On GitHub push, point Vercel at this repo with build command `npm run build`
-and output directory `dist` — no other config needed, it's fully static.
+**Local editing loop:**
+1. Edit content JSON (`src/content/*.json`) or component files in Spck.
+2. `git add -A && git commit -m "..." && git push`
+3. Watch the Actions tab. If `check-content` or `tsc` fails, the log tells you exactly which file/line.
 
-## Status: full MVP loop wired (Milestone 2)
+## What's actually built right now
 
-**Also built:**
-- `ui/mergeInteraction.ts` — touch drag-to-merge, with a non-colour-dependent
-  highlight ring on a valid target (dashed pulse, not just hue)
-- `ui/revealSequence.ts` — 2–3s reveal overlay, never states what changed
-- `ui/archiveView.ts` — chronological gallery + tap-to-inspect detail view
-  (shows generation/discovery date only — no trait labels or stats)
-- `ui/debugPanel.ts` — dev-only raw genome inspector, dynamically imported
-  behind `import.meta.env.DEV` so it's fully dead-code-eliminated from the
-  production bundle (verified: zero trace of it in `dist/`)
-- Habitat ↔ Archive nav tab
+- Full craft engine (`src/engine/`): recipe matching, multi-step reachability, the "ingredient missing" nudge, the tiered Ink hint system.
+- Persistence (`src/persistence/`): IndexedDB save + versioned schema + JSON export/import.
+- One playable region — **The Coastal Fog** — 9 expeditions, several multi-step chains, one Landmark Expedition (rainbow).
+- Full Workbench/Wordbank split UI, tabbed by category, with the ink-bloom craft animation.
+- 3 sample Daily Dispatch puzzles.
 
-Play loop end to end: drag one organism onto another → reveal → child is
-recorded to the Archive and added to the habitat → tap the Archive tab to
-browse everything discovered so far.
+## What's NOT built yet (by design — see doc's validation priorities)
 
-## What's still deferred (post-MVP per the design spec)
+- Region map screen (currently jumps straight into the next incomplete expedition)
+- Fieldbook UI (data is tracked in save state, no screen yet)
+- Ink spending UI / hint buttons (engine functions exist, not wired to buttons)
+- Web ad integration
+- Daily Dispatch screen (content exists, no dedicated UI yet)
+- Region-select / world map
 
-WebGL/shader renderer, ancestry tree view, additional body plans, multiple
-habitats, environmental adaptation, parent consumption/resource cost, direct
-organism interaction beyond merging, offline simulation, per-organism audio,
-ambient session-direction hints. None of this should require reworking
-`core/` or the screens above — see the spec's own scope reminder (§8).
+This is deliberately scoped to validation priority #1 from the concept doc: prove the Workbench/Wordbank UI works before building everything around it.
 
-## Why this order
+## Adding content safely
 
-The design spec's own architectural constraint is that `core/` must be
-headless and reusable regardless of renderer. Building and testing it first
-means the parts most expensive to get wrong (determinism, trait ranges,
-seed integrity) are locked down before any UI work touches them.
+Always run `npm run check-content` (or just push — CI runs it for you) after editing `words.json`, `recipes.json`, or a region file. It catches typo'd word ids before they ship as a broken expedition.
+
+## Testing on your phone before pushing
+
+There's no local dev server in this workflow, so the fastest check is:
+1. Read the diff carefully (Spck shows it).
+2. Push to a branch, not `main`, if you want to preview via a PR without touching the live site — Pages won't rebuild until you merge.

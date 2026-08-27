@@ -1,0 +1,33 @@
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-4) var(--space-2);
+  background: var(--color-ink-navy);
+  color: var(--color-parchment);
+}
+
+.top-bar__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: 0.02em;
+}
+
+.top-bar__stats {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.top-bar__stat {
+  font-family: var(--font-utility);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--color-parchment);
+  opacity: 0.85;
+}
+
+.top-bar__stat--ink {
+  color: var(--color-amber-soft);
+  opacity: 1;
+}
