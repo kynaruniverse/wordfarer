@@ -2,22 +2,51 @@
  * Validates the content graph before it ships. Run via `npm run check-content`,
  * wired into CI so a typo'd word id in a hand-edited JSON file (easy to do
  * from a phone) fails the build instead of shipping a broken expedition.
+ *
+ * Reads files directly off disk rather than using static ESM JSON imports —
+ * this avoids environment-specific module resolution issues and means a new
+ * region file is picked up automatically, with no import list to maintain.
  */
-import wordsData from '../src/content/words.json';
-import recipesData from '../src/content/recipes.json';
-import coastalFog from '../src/content/regions/coastal-fog.json';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { WordDef, RecipeDef, ExpeditionDef } from '../src/types';
 
-const words = wordsData as WordDef[];
-const recipes = recipesData as RecipeDef[];
-const regionFiles = [coastalFog];
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(__dirname, '..');
+const CONTENT_DIR = join(ROOT, 'src', 'content');
+
+function readJson<T>(relativePath: string): T {
+  const fullPath = join(CONTENT_DIR, relativePath);
+  if (!existsSync(fullPath)) {
+    throw new Error(`Content file not found on disk: ${fullPath}`);
+  }
+  return JSON.parse(readFileSync(fullPath, 'utf-8')) as T;
+}
 
 let errors = 0;
-
 function fail(message: string) {
   console.error(`✗ ${message}`);
   errors++;
 }
+
+const words = readJson<WordDef[]>('words.json');
+const recipes = readJson<RecipeDef[]>('recipes.json');
+
+const regionsDir = join(CONTENT_DIR, 'regions');
+const regionFileNames = existsSync(regionsDir)
+  ? readdirSync(regionsDir).filter((f) => f.endsWith('.json'))
+  : [];
+
+if (regionFileNames.length === 0) {
+  fail(`No region files found in ${regionsDir}`);
+}
+
+const regionFiles = regionFileNames.map((name) =>
+  readJson<{ region: { id: string; expeditionIds: string[] }; expeditions: ExpeditionDef[] }>(
+    join('regions', name)
+  )
+);
 
 const wordIds = new Set(words.map((w) => w.id));
 
@@ -43,8 +72,7 @@ for (const r of recipes) {
 
 // Expeditions reference real target/chain word ids
 for (const file of regionFiles) {
-  const expeditions = file.expeditions as ExpeditionDef[];
-  for (const exp of expeditions) {
+  for (const exp of file.expeditions) {
     if (!wordIds.has(exp.targetId)) {
       fail(`Expedition "${exp.id}" targets unknown word id "${exp.targetId}"`);
     }
@@ -53,7 +81,7 @@ for (const file of regionFiles) {
     }
   }
 
-  const expeditionIds = new Set(expeditions.map((e) => e.id));
+  const expeditionIds = new Set(file.expeditions.map((e) => e.id));
   for (const id of file.region.expeditionIds) {
     if (!expeditionIds.has(id)) {
       fail(`Region "${file.region.id}" lists expedition id "${id}" with no matching expedition definition`);
@@ -65,5 +93,7 @@ if (errors > 0) {
   console.error(`\n${errors} content error(s) found.`);
   process.exit(1);
 } else {
-  console.log(`✓ Content graph OK — ${words.length} words, ${recipes.length} recipes, ${regionFiles.length} region file(s).`);
+  console.log(
+    `✓ Content graph OK — ${words.length} words, ${recipes.length} recipes, ${regionFiles.length} region file(s).`
+  );
 }
