@@ -1,0 +1,82 @@
+{
+  "region": {
+    "id": "coastal-fog",
+    "title": "The Coastal Fog",
+    "description": "Weather rolling in off a grey harbour town — where every word begins.",
+    "expeditionIds": [
+      "cf-vapour",
+      "cf-cloud",
+      "cf-rain",
+      "cf-puddle",
+      "cf-mist",
+      "cf-fog",
+      "cf-boat",
+      "cf-harbour",
+      "cf-rainbow"
+    ]
+  },
+  "expeditions": [
+    {
+      "id": "cf-vapour",
+      "regionId": "coastal-fog",
+      "clue": "When water forgets it has a shape, it rises like this — the first step before something greater forms overhead.",
+      "targetId": "vapour"
+    },
+    {
+      "id": "cf-cloud",
+      "regionId": "coastal-fog",
+      "clue": "Countless rising things gather high overhead until there's enough of them to see from the ground.",
+      "targetId": "cloud",
+      "chain": ["vapour"]
+    },
+    {
+      "id": "cf-rain",
+      "regionId": "coastal-fog",
+      "clue": "When the air can no longer hold what it's carrying, this is what gathers overhead before the fall.",
+      "targetId": "rain",
+      "chain": ["vapour", "cloud"]
+    },
+    {
+      "id": "cf-puddle",
+      "regionId": "coastal-fog",
+      "clue": "Water that fell from above and has nowhere left to go but sit.",
+      "targetId": "puddle",
+      "chain": ["vapour", "cloud", "rain"]
+    },
+    {
+      "id": "cf-mist",
+      "regionId": "coastal-fog",
+      "clue": "A thin veil of water clinging low to the ground on a cold morning.",
+      "targetId": "mist",
+      "chain": ["vapour"]
+    },
+    {
+      "id": "cf-fog",
+      "regionId": "coastal-fog",
+      "clue": "That same low veil, thickened until the whole road disappears into white.",
+      "targetId": "fog",
+      "chain": ["vapour", "mist"]
+    },
+    {
+      "id": "cf-boat",
+      "regionId": "coastal-fog",
+      "clue": "Wind caught in cloth, pushing something small across open water.",
+      "targetId": "boat"
+    },
+    {
+      "id": "cf-harbour",
+      "regionId": "coastal-fog",
+      "clue": "Where a boat finally comes to rest against solid ground.",
+      "targetId": "harbour",
+      "chain": ["boat"]
+    },
+    {
+      "id": "cf-rainbow",
+      "regionId": "coastal-fog",
+      "clue": "After the sky has wept and the sun returns, a bridge of colour appears where the two meet.",
+      "targetId": "rainbow",
+      "chain": ["vapour", "cloud", "rain"],
+      "isLandmark": true
+    }
+  ]
+}
